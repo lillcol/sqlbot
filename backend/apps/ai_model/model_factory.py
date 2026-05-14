@@ -165,17 +165,19 @@ async def get_default_config(custom_model_id: Optional[int] = None) -> LLMConfig
                                      "key" in item and "val" in item}
             except Exception:
                 pass
-        if not db_model.api_domain.startswith("http"):
-            db_model.api_domain = await sqlbot_decrypt(db_model.api_domain)
-            if db_model.api_key:
-                db_model.api_key = await sqlbot_decrypt(db_model.api_key)
+        api_domain = db_model.api_domain
+        api_key = db_model.api_key
+        if api_domain and not api_domain.startswith("http"):
+            api_domain = await sqlbot_decrypt(api_domain)
+        if api_key and not api_key.startswith("sk-"):
+            api_key = await sqlbot_decrypt(api_key)
 
         # 构造 LLMConfig
         return LLMConfig(
             model_id=db_model.id,
             model_type="openai" if db_model.protocol == 1 else "vllm",
             model_name=db_model.base_model,
-            api_key=db_model.api_key,
-            api_base_url=db_model.api_domain,
+            api_key=api_key,
+            api_base_url=api_domain,
             additional_params=additional_params,
         )
