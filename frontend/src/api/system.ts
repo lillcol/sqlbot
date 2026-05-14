@@ -14,9 +14,11 @@ export const modelApi = {
     return request.post('/system/aimodel', param)
   },
   edit: (data: any) => {
-    const param = data
+    const param = { ...data }
     if (param.api_key) {
-      param.api_key = LicenseGenerator.sqlbotEncrypt(data.api_key)
+      param.api_key = LicenseGenerator.sqlbotEncrypt(param.api_key)
+    } else {
+      delete param.api_key
     }
     if (param.api_domain) {
       param.api_domain = LicenseGenerator.sqlbotEncrypt(data.api_domain)

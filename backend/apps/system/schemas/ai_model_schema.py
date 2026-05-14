@@ -1,5 +1,5 @@
 
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from apps.swagger.i18n import PLACEHOLDER_PREFIX
@@ -27,4 +27,6 @@ class AiModelCreator(AiModelItem):
     config_list: List[AiModelConfigItem] = Field(description=f"{PLACEHOLDER_PREFIX}config_list")
     
 class AiModelEditor(AiModelCreator, BaseCreatorDTO):
-    pass
+    api_key: Optional[str] = ""
+    api_key_configured: Optional[bool] = False
+    api_key_masked: Optional[str] = ""

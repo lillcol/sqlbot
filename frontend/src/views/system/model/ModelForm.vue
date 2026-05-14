@@ -36,6 +36,8 @@ const modelForm = reactive({
   model_type: 0,
   base_model: '',
   api_key: '',
+  api_key_configured: false,
+  api_key_masked: '',
   api_domain: '',
   config_list: [],
   protocol: 1,
@@ -50,6 +52,13 @@ let tempConfigMap = new Map<string, Array<any>>()
 
 const modelSelected = computed(() => {
   return !!modelForm.base_model
+})
+const apiKeyPlaceholder = computed(() => {
+  if (modelForm.api_key_configured) {
+    const masked = modelForm.api_key_masked ? `${modelForm.api_key_masked}，` : ''
+    return `${t('datasource.please_enter')}${t('common.empty')}API Key，${masked}留空则不修改`
+  }
+  return t('datasource.please_enter') + t('common.empty') + 'API Key'
 })
 const currentSupplier = computed(() => {
   if (!modelForm.supplier) {
@@ -349,9 +358,8 @@ defineExpose({
             <el-input
               v-model="modelForm.api_key"
               clearable
-              :placeholder="$t('datasource.please_enter') + $t('common.empty') + 'API Key'"
+              :placeholder="apiKeyPlaceholder"
               type="password"
-              show-password
             />
           </el-form-item>
         </el-form>

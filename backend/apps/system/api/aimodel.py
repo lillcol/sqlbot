@@ -19,6 +19,14 @@ router = APIRouter(tags=["system_model"], prefix="/system/aimodel")
 from common.audit.models.log_model import OperationType, OperationModules
 from common.audit.schemas.logger_decorator import LogConfig, system_log
 
+
+def mask_secret(value: str | None) -> str:
+    if not value:
+        return ""
+    if len(value) <= 8:
+        return "********"
+    return f"{value[:4]}********{value[-4:]}"
+
 @router.post("/status", include_in_schema=False)
 @require_permissions(permission=SqlbotPermission(role=['admin'])) 
 async def check_llm(info: AiModelCreator, trans: Trans):
@@ -112,15 +120,20 @@ async def get_model_by_id(
             config_list = [AiModelConfigItem(**item) for item in raw]
         except Exception:
             pass
+    api_key_configured = bool(db_model.api_key)
+    api_key_masked = ""
     try:
         if db_model.api_key:
-            db_model.api_key = await sqlbot_decrypt(db_model.api_key)
+            api_key_masked = mask_secret(await sqlbot_decrypt(db_model.api_key))
         if db_model.api_domain:
             db_model.api_domain = await sqlbot_decrypt(db_model.api_domain)
     except Exception:
-        pass
+        api_key_masked = "********" if api_key_configured else ""
     data = AiModelDetail.model_validate(db_model).model_dump(exclude_unset=True)
     data.pop("config", None)
+    data["api_key"] = ""
+    data["api_key_configured"] = api_key_configured
+    data["api_key_masked"] = api_key_masked
     data["config_list"] = config_list
     return AiModelEditor(**data)
 
@@ -154,6 +167,10 @@ async def update_model(
     data = editor.model_dump(exclude_unset=True)
     data["config"] = json.dumps([item.model_dump(exclude_unset=True) for item in editor.config_list])
     data.pop("config_list", None)
+    data.pop("api_key_configured", None)
+    data.pop("api_key_masked", None)
+    if not data.get("api_key"):
+        data.pop("api_key", None)
     db_model = session.get(AiModelDetail, id)
     #update_data = AiModelDetail.model_validate(data)
     db_model.sqlmodel_update(data)

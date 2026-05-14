@@ -8,7 +8,7 @@ Create Date: 2025-08-25 11:38:32.990973
 from alembic import op
 import sqlalchemy as sa
 import sqlmodel.sql.sqltypes
-import pgvector
+from pgvector.sqlalchemy import VECTOR
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
@@ -28,7 +28,7 @@ def upgrade():
     sa.Column('create_time', sa.DateTime(), nullable=True),
     sa.Column('word', sqlmodel.sql.sqltypes.AutoString(length=255), nullable=True),
     sa.Column('description', sa.Text(), nullable=True),
-    sa.Column('embedding', pgvector.sqlalchemy.vector.VECTOR(), nullable=True),
+    sa.Column('embedding', VECTOR(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
 
